@@ -103,7 +103,7 @@ def add(job,kind,path,tool_reference,replace=False):
 def html_document(job,state):
     data_url=lambda path:'data:image/png;base64,'+base64.b64encode(path.read_bytes()).decode()
     manifest={'name':state['name'],'width':state['source']['width'],'height':state['source']['height'],
-              'assets':{k:data_url(job/'assets'/f'{k}.png') for k in KINDS},'back':data_url(TEMPLATES/'back.png')}
+              'assets':{k:data_url(job/'assets'/f'{k}.png') for k in KINDS},'back':data_url(job/'back.png' if (job/'back.png').is_file() else TEMPLATES/'back.png')}
     if state.get('preview_url'):
         manifest['previewUrl']=state['preview_url']
         manifest['previewQr']=data_url(job/'mobile-qr.png')
@@ -151,6 +151,7 @@ def assemble(job,preview_url=None):
     save(job/'provenance.json',provenance)
     shutil.copyfile(TEMPLATES/'THIRD_PARTY_NOTICES.md',job/'THIRD_PARTY_NOTICES.md')
     names=['index.html','source.png',state['source']['original'],'provenance.json','prompts.json','THIRD_PARTY_NOTICES.md']
+    if (job/'back.png').is_file():names.append('back.png')
     if state.get('preview_url'):names.append('mobile-qr.png')
     names += [f'assets/{k}.png' for k in KINDS]+[f'masks/{k}.png' for k in KINDS if (job/'masks'/f'{k}.png').exists()]
     with zipfile.ZipFile(job/'card.zip','w',zipfile.ZIP_DEFLATED) as archive:
